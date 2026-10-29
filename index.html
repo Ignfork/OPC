@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OPC · Observe Profit Charts · take profit on your bags without touching the chart · $OPC</title>
+<meta name="description" content="Observe Profit Charts: make an offer on anyone's Solana memecoin bag, or sell yours whole, off the chart. Size changes hands without a single candle. $OPC">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="icon" id="fav" href="data:,">
+<style>
+:root{
+  --bg:#070908; --bg2:#0b0e0c; --pan:#101411; --pan2:#151a16; --line:#1f2620; --line2:#2a332c;
+  --fg:#f2f5f2; --mut:#8a948c; --dim:#5d665f;
+  --g:#22c55e; --g2:#4ade80; --g3:#86efac; --lime:#bef264; --dg:#0d2818; --dg2:#133821; --forest:#14532d;
+  --red:#f05252; --grey:#d4d8d4; --white:#ffffff;
+  --sans:"Inter",ui-sans-serif,system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+html,body{margin:0;overflow-x:hidden}
+body{background:var(--bg);color:var(--fg);font:400 14px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+.num{font-variant-numeric:tabular-nums}
+.up{color:var(--g2)}.dn{color:var(--red)}.mut{color:var(--mut)}
+/* shell */
+.side{position:fixed;left:0;top:0;bottom:0;width:232px;background:var(--bg2);border-right:1px solid var(--line);padding:14px 12px;display:flex;flex-direction:column;z-index:40;transition:transform .25s}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 18px;font:800 17px var(--sans);letter-spacing:-.01em}
+.brand svg{width:30px;height:30px}
+.brand small{display:block;font:500 11px var(--sans);color:var(--mut);letter-spacing:.02em}
+.nav a{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:9px;color:#c3c9c4;font-weight:500;margin-bottom:2px}
+.nav a svg{width:16px;height:16px;opacity:.85}
+.nav a:hover{background:var(--pan);color:#fff}
+.nav a.on{background:var(--pan2);color:#fff;box-shadow:inset 0 0 0 1px var(--line2)}
+.nav .h{font-size:11px;letter-spacing:.1em;color:var(--dim);margin:18px 10px 6px;font-weight:600}
+.side .sp{flex:1}
+.side .tok{border:1px solid var(--line2);border-radius:12px;padding:12px;background:linear-gradient(160deg,var(--dg),var(--bg2))}
+.side .tok b{font-weight:700}
+.side .tok span{display:block;font-size:12px;color:var(--mut)}
+main{margin-left:232px;min-width:0}
+.top{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;padding:12px 22px;background:rgba(7,9,8,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.crumb{font-size:13px;color:var(--mut)}
+.crumb b{color:#fff;font-weight:600}
+.top .sp{flex:1}
+.hb{display:none;width:36px;height:36px;border:1px solid var(--line2);border-radius:9px;background:var(--pan);place-items:center}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line2);background:var(--pan2);color:#fff;padding:9px 14px;border-radius:10px;font:600 13.5px var(--sans);white-space:nowrap;transition:background .15s,border-color .15s,transform .15s}
+.btn:hover{border-color:var(--g);transform:translateY(-1px)}
+.btn.w{background:#f2f5f2;color:#0a0d0b;border-color:#f2f5f2}
+.btn.w:hover{background:var(--g3);border-color:var(--g3)}
+.btn.g{background:var(--g);color:#04210f;border-color:var(--g)}
+.btn.g:hover{background:var(--g2);border-color:var(--g2)}
+.btn.ghost{background:none;border-color:transparent;color:#c3c9c4}
+.btn.ghost:hover{color:#fff;border-color:transparent}
+.wrap{max-width:1180px;margin:0 auto;padding:22px}
+/* hero */
+.hero{border:1px solid var(--line);border-radius:20px;background:radial-gradient(ellipse at 85% -10%,rgba(34,197,94,.16),transparent 55%),linear-gradient(180deg,var(--pan),var(--bg2));padding:30px;position:relative;overflow:hidden}
+.hero .eye{width:64px;height:40px;margin-bottom:16px}
+h1{margin:0;font:800 clamp(32px,4.6vw,56px)/1.04 var(--sans);letter-spacing:-.035em}
+h1 span{color:#6f7a71}
+h1 em{font-style:normal;color:var(--g2)}
+.hero p.l{max-width:640px;color:#b4bcb6;font-size:15.5px;margin:16px 0 22px}
+.stats{display:flex;gap:28px;flex-wrap:wrap;margin-bottom:24px}
+.stats div span{display:block;font-size:10.5px;letter-spacing:.12em;color:var(--dim);font-weight:600}
+.stats div b{font:700 19px var(--sans)}
+.hcta{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+/* observe card */
+.obs{margin-top:26px;border:1px solid var(--line2);border-radius:16px;background:var(--bg);overflow:hidden}
+.obs .oh{display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.obs .oh img,.lg{width:34px;height:34px;border-radius:50%;background:var(--pan2);flex:none;object-fit:cover}
+.lg{display:grid;place-items:center;font:700 12px var(--sans);color:#04210f}
+.obs .oh b{font:700 18px var(--sans)}
+.obs .oh small{display:block;font-size:12px;color:var(--mut)}
+.mode{margin-left:auto;display:flex;background:var(--pan);border:1px solid var(--line2);border-radius:10px;padding:3px}
+.mode button{border:0;background:none;padding:6px 12px;border-radius:7px;font:600 12.5px var(--sans);color:var(--mut)}
+.mode button.on{background:var(--g);color:#04210f}
+.mode button.on.d{background:var(--red);color:#fff}
+.obs .bd{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:0}
+.chartw{padding:14px 16px;border-right:1px solid var(--line);position:relative;min-width:0}
+#oc{width:100%;height:240px;display:block}
+.cleg{display:flex;gap:14px;font-size:11.5px;color:var(--mut);margin-top:6px;flex-wrap:wrap}
+.cleg i{display:inline-block;width:10px;height:3px;margin-right:6px;vertical-align:middle}
+.side2{padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.sz label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--mut);margin-bottom:8px}
+.sz label b{color:#fff;font:700 16px var(--sans)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:99px;background:linear-gradient(90deg,var(--g) var(--p,40%),var(--line2) var(--p,40%));outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--g);cursor:grab}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid var(--g);cursor:grab}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cmp div{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--pan)}
+.cmp span{display:block;font-size:11.5px;color:var(--mut)}
+.cmp b{font:800 24px var(--sans);letter-spacing:-.02em}
+.cmp .a{border-color:rgba(240,82,82,.35);background:rgba(240,82,82,.06)}
+.cmp .b{border-color:rgba(34,197,94,.45);background:rgba(34,197,94,.07)}
+.rows div{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.rows div:last-child{border-bottom:0}
+.rows span{color:var(--mut)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:12px;border-top:1px solid var(--line)}
+.chips button{display:flex;align-items:center;gap:7px;border:1px solid var(--line2);background:var(--pan);border-radius:999px;padding:4px 10px 4px 4px;font:600 12.5px var(--sans);color:#c3c9c4}
+.chips button img,.chips button .lg{width:20px;height:20px;font-size:9px}
+.chips button.on{border-color:var(--g);color:#fff;background:var(--dg)}
+/* add a bag banner */
+.bag{margin-top:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;border:1px solid rgba(190,242,100,.35);border-radius:14px;padding:14px 18px;background:linear-gradient(90deg,rgba(190,242,100,.12),rgba(34,197,94,.06))}
+.bag b{font-weight:700}
+.bag span{color:#cfe8b0}
+.bag button{margin-left:auto;border:0;background:none;color:var(--lime);font:700 14px var(--sans)}
+/* sections */
+.sec{margin-top:40px}
+.sh{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.sh h2{margin:0;font:700 20px var(--sans);letter-spacing:-.01em}
+.sh .sp{flex:1}
+.tabs{display:flex;gap:4px;background:var(--pan);border:1px solid var(--line2);border-radius:10px;padding:3px;flex-wrap:wrap}
+.tabs button{border:0;background:none;padding:6px 11px;border-radius:7px;font:600 12.5px var(--sans);color:var(--mut)}
+.tabs button i{font-style:normal;color:var(--dim);margin-left:4px}
+.tabs button.on{background:var(--pan2);color:#fff;box-shadow:inset 0 0 0 1px var(--line2)}
+.srch{display:flex;align-items:center;gap:8px;border:1px solid var(--line2);border-radius:10px;background:var(--pan);padding:8px 12px;min-width:240px}
+.srch input{border:0;outline:none;background:none;width:100%;font-size:13px}
+.box{border:1px solid var(--line);border-radius:16px;background:var(--pan);overflow:hidden}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:820px}
+th{font-size:10.5px;letter-spacing:.1em;color:var(--dim);font-weight:600;text-align:right;padding:11px 14px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--bg2)}
+th:first-child,th.l{text-align:left}
+td{padding:11px 14px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;font-size:13.5px}
+td.l{text-align:left}
+tr:last-child td{border-bottom:0}
+tbody tr{transition:background .12s}
+tbody tr:hover{background:var(--pan2)}
+.coin{display:flex;align-items:center;gap:10px}
+.coin img,.coin .lg{width:28px;height:28px;font-size:10px}
+.coin b{display:block;font-weight:700}
+.coin small{color:var(--mut);font-size:11.5px}
+.sd{font:700 10.5px var(--sans);padding:3px 7px;border-radius:6px;letter-spacing:.04em}
+.sd.ask{background:rgba(240,82,82,.14);color:#ff8a8a}.sd.bid{background:rgba(34,197,94,.14);color:var(--g2)}.sd.prv{background:rgba(212,216,212,.12);color:var(--grey);margin-left:4px}
+.imp{display:inline-flex;align-items:center;gap:6px}
+.imp i{display:inline-flex;gap:2px}
+.imp i b{width:3px;height:10px;border-radius:1px;background:var(--line2)}
+.imp i b.on{background:var(--red)}
+.tk{border:1px solid var(--line2);background:var(--bg2);border-radius:8px;padding:5px 10px;font:600 12px var(--sans);color:#d7ddd8}
+.tk:hover{border-color:var(--g);color:#fff}
+.note{font-size:12px;color:var(--dim);margin-top:8px}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--mut)}
+.live i{width:7px;height:7px;border-radius:50%;background:#f5b041}
+.live.on i{background:var(--g);box-shadow:0 0 8px var(--g);animation:bl 1.5s infinite}
+@keyframes bl{50%{opacity:.3}}
+/* how (light) */
+.light{background:#eef1ee;color:#0a0d0b;border-radius:20px;padding:28px;margin-top:40px}
+.light h2{margin:0 0 6px;font:800 30px var(--sans);letter-spacing:-.03em}
+.light p.l{color:#4d5850;margin:0 0 22px;max-width:620px}
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.step{background:#fff;border-radius:14px;padding:16px;border:1px solid #dde3dd}
+.step .n{width:30px;height:30px;border-radius:9px;background:#0a0d0b;color:var(--g2);display:grid;place-items:center;font:800 14px var(--sans);margin-bottom:12px}
+.step h3{margin:0 0 6px;font:700 16px var(--sans)}
+.step p{margin:0;color:#4d5850;font-size:13.5px}
+/* green band */
+.band{margin-top:40px;border-radius:20px;background:linear-gradient(135deg,var(--forest),var(--dg) 60%,#06150c);border:1px solid #1d4a2c;padding:28px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:center}
+.band h2{margin:0 0 10px;font:800 34px/1.05 var(--sans);letter-spacing:-.03em}
+.band p{color:#b9dcc3;margin:0}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.vs div{border-radius:14px;padding:16px}
+.vs .p{background:rgba(0,0,0,.35);border:1px solid rgba(240,82,82,.35)}
+.vs .o{background:rgba(190,242,100,.1);border:1px solid rgba(190,242,100,.4)}
+.vs span{font-size:12px;color:#b9dcc3}
+.vs b{display:block;font:800 30px var(--sans);letter-spacing:-.02em;margin:4px 0}
+.vs small{color:#9fbfa8;font-size:12px}
+/* docs + risk */
+.dr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:40px}
+.q{border-bottom:1px solid var(--line)}
+.q:last-child{border-bottom:0}
+.q button{width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;border:0;background:none;padding:14px 16px;text-align:left;font:600 14px var(--sans)}
+.q button i{font-style:normal;color:var(--g2);transition:transform .2s}
+.q.open button i{transform:rotate(45deg)}
+.q .a{max-height:0;overflow:hidden;transition:max-height .3s;padding:0 16px;color:#aab3ac;font-size:13.5px}
+.q.open .a{max-height:240px;padding-bottom:14px}
+.boxh{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;font:700 15px var(--sans)}
+.boxh i{width:8px;height:8px;border-radius:2px}
+/* token */
+.tokb{margin-top:40px;border:1px solid var(--line2);border-radius:20px;padding:26px;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:24px;background:radial-gradient(ellipse at 0% 100%,rgba(34,197,94,.18),transparent 60%),var(--pan)}
+.tokb h2{margin:0;font:800 44px var(--sans);letter-spacing:-.04em}
+.tokb p{color:#b4bcb6}
+.ca{display:flex;border:1px solid var(--line2);border-radius:11px;background:var(--bg2);margin:14px 0;overflow:hidden}
+.ca span{font:700 11px var(--sans);color:var(--dim);padding:12px 0 12px 14px}
+.ca b{flex:1;padding:11px 12px;font:500 13px var(--mono);color:var(--g3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ca button{border:0;border-left:1px solid var(--line2);background:none;padding:0 14px;font:600 12.5px var(--sans)}
+.kv div{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.kv div:last-child{border-bottom:0}
+.kv span{color:var(--mut)}
+footer{padding:30px 22px 40px;color:var(--dim);font-size:12.5px;max-width:1180px;margin:0 auto}
+footer a{color:var(--g2)}
+/* modal */
+.modal{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:14px}
+.modal.on{display:flex}
+.mb{width:min(520px,100%);max-height:calc(100vh - 28px);overflow:auto;background:var(--pan);border:1px solid var(--line2);border-radius:18px}
+.mh{display:flex;align-items:center;padding:16px 18px;border-bottom:1px solid var(--line);font:700 17px var(--sans)}
+.mh button{margin-left:auto;width:32px;height:32px;border-radius:9px;border:1px solid var(--line2);background:var(--bg2)}
+.mbd{padding:18px}
+.f label{display:block;font-size:12px;color:var(--mut);font-weight:600;margin:14px 0 6px}
+.f label:first-child{margin-top:0}
+.f input[type=text],.f input[type=number],.f select{width:100%;background:var(--bg2);border:1px solid var(--line2);border-radius:10px;padding:10px 12px;outline:none;font-size:14px}
+.f select option{background:var(--pan)}
+.f input:focus,.f select:focus{border-color:var(--g)}
+.f .r2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.seg button{border:1px solid var(--line2);background:var(--bg2);border-radius:10px;padding:10px;font:700 14px var(--sans);color:var(--mut)}
+.seg button.on.b{background:var(--g);color:#04210f;border-color:var(--g)}
+.seg button.on.a{background:var(--red);color:#fff;border-color:var(--red)}
+.tg{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:13px;color:#c3c9c4;cursor:pointer}
+.tg input{accent-color:var(--g);width:16px;height:16px}
+.sum{margin-top:14px;border:1px dashed var(--line2);border-radius:12px;padding:12px;font-size:13px;color:#c3c9c4}
+.sum b{color:#fff}
+.mf{display:flex;gap:10px;padding:0 18px 18px}
+.mf .btn{flex:1;justify-content:center}
+.err{color:var(--red);font-size:12.5px;min-height:16px;margin-top:8px}
+/* positions */
+.pos{padding:6px 16px}
+.pos .it{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.pos .it:last-child{border-bottom:0}
+.pos .it .tx{flex:1;min-width:200px}
+.pos .it .tx b{font-weight:700}
+.pos .empty{padding:20px 0;color:var(--mut);text-align:center}
+#toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,16px);opacity:0;z-index:90;background:#f2f5f2;color:#0a0d0b;padding:11px 16px;border-radius:11px;font:600 13.5px var(--sans);transition:.25s;pointer-events:none;max-width:calc(100% - 32px);text-align:center;border-left:4px solid var(--g)}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+.scrim{display:none}
+@media (max-width:1000px){.obs .bd,.band,.dr,.tokb{grid-template-columns:minmax(0,1fr)}.chartw{border-right:0;border-bottom:1px solid var(--line)}.steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:860px){.side{transform:translateX(-100%)}.side.open{transform:none}.scrim.on{display:block;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:35}main{margin-left:0}.hb{display:grid}}
+@media (max-width:560px){#liveT{display:none}.wrap{padding:14px}.hero{padding:20px}.top{padding:10px 14px}.stats{gap:16px}.stats div b{font-size:16px}.steps,.vs,.cmp{grid-template-columns:minmax(0,1fr)}.srch{min-width:0;width:100%}.light,.band,.tokb{padding:20px}.f .r2{grid-template-columns:1fr}#oc{height:200px}.mode{margin-left:0}}
+</style>
+</head>
+<body>
+<aside class="side" id="side">
+  <a class="brand" href="#home"><span id="brandIco"></span><span>OPC<small>Observe Profit Charts</small></span></a>
+  <nav class="nav" id="nav">
+    <a href="#home" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Home</a>
+    <a href="#observe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Observe</a>
+    <a href="#positions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Positions</a>
+    <a href="#" data-offer><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 7h13l-4-4M17 17H4l4 4"/></svg>Make offer</a>
+    <a href="#offers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5"/></svg>Bags</a>
+    <a href="#" data-addbag><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg>Add a bag</a>
+    <a href="#markets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>Markets</a>
+    <div class="h">INFORMATION</div>
+    <a href="#docs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h12l4 4v12H4z"/><path d="M8 12h8M8 16h6"/></svg>Docs</a>
+    <a href="#risk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg>Risk</a>
+    <a href="#" id="xSide"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.2 8.2L23 22h-6.6l-5.2-6.8L5.3 22H2.2l7.7-8.8L1.8 2h6.8l4.7 6.2L18.9 2Zm-1.2 18h1.7L7.4 3.9H5.6L17.7 20Z"/></svg>OPCLive ↗</a>
+  </nav>
+  <span class="sp"></span>
+  <a class="tok" href="#token"><b>$OPC</b><span>The Observe Profit Charts token</span></a>
+</aside>
+<div class="scrim" id="scrim"></div>
+
+<main>
+<div class="top"><button class="hb" id="hb" type="button" aria-label="Menu">☰</button><span class="crumb">OPC / <b id="crumbB">Home</b></span><span class="sp"></span><span class="live" id="live"><i></i><span id="liveT">connecting…</span></span><button class="btn w" type="button" id="connect">▣ Connect wallet</button></div>
+<div class="wrap">
+
+<section class="hero" id="home">
+  <span id="eyeHero"></span>
+  <h1>Buy the bag. Sell the bag.<br><span>Just <em>observe</em> the profit.</span></h1>
+  <p class="l">Make an offer on anyone's Solana memecoin bag, or sell yours whole. Every offer is approved by the wallet behind it and checked against its on-chain balance, so size changes hands without a single candle on the chart. You just watch.</p>
+  <div class="stats" id="stats"><div><span>MARKETS</span><b id="stM">—</b></div><div><span>OPEN OFFERS</span><b id="stO">—</b></div><div><span>SOL BIDDING</span><b id="stB">—</b></div><div><span>SOL ASKED</span><b id="stA">—</b></div><div><span>CHART IMPACT</span><b class="up">0.00%</b></div></div>
+  <div class="hcta"><a class="btn w" href="#offers">Get started →</a><button class="btn" type="button" data-offer>Make an offer →</button><button class="btn ghost" type="button" id="lookup">Look up any wallet ↗</button></div>
+
+  <div class="obs" id="observe">
+    <div class="oh"><span id="oLogo"></span><div><b id="oTitle">Sell $100K of —</b><small id="oSub">Example ticket at live prices</small></div><div class="mode" id="omode"><button type="button" data-m="pool" class="d">Into the pool</button><button type="button" data-m="otc" class="on">Observe (OTC)</button></div></div>
+    <div class="bd">
+      <div class="chartw"><canvas id="oc"></canvas><div class="cleg"><span><i style="background:#4ade80"></i>live 1h candles</span><span><i style="background:#f05252"></i>what a market sell would print</span><span><i style="background:#bef264"></i>OTC: the chart you observe</span><span id="ocSrc">GeckoTerminal</span></div></div>
+      <div class="side2">
+        <div class="sz"><label for="osz"><span>Ticket size</span><b id="oszV">$100K</b></label><input type="range" id="osz" min="0" max="1000" value="666" aria-label="Ticket size"></div>
+        <div class="cmp"><div class="a"><span>Sold into the pool</span><b class="dn" id="oPool">—</b></div><div class="b"><span>Sold over the counter</span><b class="up">0.00%</b></div></div>
+        <div class="rows"><div><span>Pool liquidity</span><b class="num" id="oLiq">—</b></div><div><span>You'd receive (pool)</span><b class="num" id="oRecvP">—</b></div><div><span>You'd receive (OTC at spot)</span><b class="num up" id="oRecvO">—</b></div><div><span>Value saved by observing</span><b class="num up" id="oSave">—</b></div></div>
+      </div>
+    </div>
+    <div class="chips" id="ochips"></div>
+  </div>
+</section>
+
+<div class="bag"><b>Holding a coin we don't list?</b><span>Paste its mint and anyone can start bidding on it.</span><button type="button" data-addbag>Add a bag →</button></div>
+
+<section class="sec" id="offers">
+  <div class="sh"><h2>Open offers</h2><div class="tabs" id="oTabs"></div><span class="sp"></span><label class="srch">⌕<input id="oq" placeholder="Filter by token, mint, maker or #id" aria-label="Filter offers"></label></div>
+  <div class="box scroll"><table><thead><tr><th class="l">TOKEN</th><th class="l">SIDE</th><th>SIZE</th><th>PRICE</th><th>VS SPOT</th><th>CHART IMPACT AVOIDED</th><th>MAKER</th><th>EXPIRES</th><th></th></tr></thead><tbody id="oBody"></tbody></table></div>
+  <p class="note">Sample offers priced off live spot, for preview. Real offers are signed by the maker's wallet and checked against its balance at launch.</p>
+</section>
+
+<section class="sec" id="positions">
+  <div class="sh"><h2>Positions</h2><span class="mut" style="font-size:13px">Offers you made on this device</span><span class="sp"></span><button class="btn g" type="button" data-offer>+ Make offer</button></div>
+  <div class="box pos" id="pos"></div>
+</section>
+
+<section class="sec" id="markets">
+  <div class="sh"><h2>Markets</h2><span class="sp"></span><label class="srch">⌕<input id="mq" placeholder="Search" aria-label="Search markets"></label></div>
+  <div class="sh" style="margin-top:-4px"><div class="tabs" id="mTabs"><button type="button" class="on" data-s="mc">Mkt cap</button><button type="button" data-s="vol">24h volume</button><button type="button" data-s="chg">24h change</button><button type="button" data-s="liq">Liquidity</button><button type="button" data-s="imp">Most impact</button><button type="button" data-s="off">Offers</button></div></div>
+  <div class="box scroll"><table><thead><tr><th class="l">#</th><th class="l">COIN</th><th>PRICE</th><th>24H</th><th>MKT CAP</th><th>VOLUME</th><th>LIQUIDITY</th><th>$25K SELL WOULD PRINT</th><th>OFFERS</th><th></th></tr></thead><tbody id="mBody"></tbody></table></div>
+  <p class="note" id="mNote">Live data: DexScreener. Candles: GeckoTerminal.</p>
+</section>
+
+<section class="light" id="how">
+  <h2>How observing works</h2>
+  <p class="l">The pool is for small trades. Size belongs over the counter, where the price is agreed between two wallets and the chart never knows.</p>
+  <div class="steps">
+    <div class="step"><div class="n">1</div><h3>Post or find a bag</h3><p>Sellers list a whole bag. Buyers bid on any wallet's bag, public or private.</p></div>
+    <div class="step"><div class="n">2</div><h3>Wallet approves</h3><p>Every offer is signed by the wallet behind it and checked against its on-chain balance.</p></div>
+    <div class="step"><div class="n">3</div><h3>Swap in escrow</h3><p>Tokens and SOL meet in an escrow program and settle together, or not at all.</p></div>
+    <div class="step"><div class="n">4</div><h3>Observe the chart</h3><p>No market sell, no market buy. The chart stays exactly where it was.</p></div>
+  </div>
+</section>
+
+<section class="band">
+  <div><h2>Same bag.<br>Two very different charts.</h2><p>Dumping size into a thin pool moves price against you on every lamport. Over the counter, the price is the price you agreed.</p></div>
+  <div class="vs"><div class="p"><span>Market sell, $250K into a $1M pool</span><b class="dn" id="vsP">—</b><small>price impact you pay, and everyone watching sees</small></div><div class="o"><span>Over the counter, same $250K</span><b style="color:var(--lime)">0.00%</b><small>the chart doesn't move. You observe.</small></div></div>
+</section>
+
+<div class="dr">
+  <div class="box" id="docs"><div class="boxh"><i style="background:var(--g)"></i>Docs</div><div id="docsL"></div></div>
+  <div class="box" id="risk"><div class="boxh"><i style="background:var(--red)"></i>Risk</div><div id="riskL"></div></div>
+</div>
+
+<section class="tokb" id="token">
+  <div><span class="mut" style="font-size:12px;letter-spacing:.12em;font-weight:600">THE TOKEN</span><h2>$OPC</h2><p>The Observe Profit Charts token. A share of desk fees from settled offers is planned to back $OPC.</p>
+    <div class="ca"><span>CA</span><b id="caT">Posted on X at launch</b><button type="button" id="caC">Copy</button></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn g" id="buyA" href="#">Buy $OPC</a><a class="btn" id="xA" href="#">Follow on X ↗</a></div></div>
+  <div class="kv"><div><span>Name</span><b>Observe Profit Charts</b></div><div><span>Ticker</span><b>$OPC</b></div><div><span>Chain</span><b>Solana</b></div><div><span>Desk fee</span><b>planned, set at launch</b></div><div><span>Status</span><b style="color:var(--lime)">pre-launch</b></div></div>
+</section>
+</div>
+<footer>OPC · Observe Profit Charts · $OPC · <a id="xFoot" href="#">X ↗</a><br>Observe Profit Charts is an independent project, not affiliated with otc.bargains, DexScreener, GeckoTerminal or any listed token. The desk is pre-launch: open offers are samples, settlement and escrow open with $OPC, and offers made here are saved on this device. Market data is live from public APIs and may lag. Memecoins are extremely risky. Nothing here is financial advice.</footer>
+</main>
+
+<div class="modal" id="mo"><div class="mb"><div class="mh">Make an offer<button type="button" data-close>✕</button></div><div class="mbd f">
+  <div class="seg" id="mSide"><button type="button" class="b on" data-v="bid">Bid (buy a bag)</button><button type="button" class="a" data-v="ask">Ask (sell my bag)</button></div>
+  <label for="mTok">Token</label><select id="mTok"></select>
+  <div class="r2"><div><label for="mSize">Size (tokens)</label><input type="number" id="mSize" min="0" step="any"></div><div><label for="mPrice">Price vs spot</label><input type="number" id="mPrice" value="-10" step="0.5"></div></div>
+  <div class="r2"><div><label for="mExp">Expires in</label><select id="mExp"><option value="1">1 hour</option><option value="24" selected>24 hours</option><option value="168">7 days</option></select></div><div><label for="mMaker">Counterparty</label><select id="mMaker"><option value="any">Anyone</option><option value="private">One wallet (private)</option></select></div></div>
+  <div id="privW" style="display:none"><label for="mWal">Counterparty wallet</label><input type="text" id="mWal" placeholder="Solana wallet address"></div>
+  <div class="sum" id="mSum"></div><div class="err" id="mErr"></div>
+</div><div class="mf"><button class="btn g" type="button" id="mGo">Post offer (preview)</button><button class="btn" type="button" data-close>Cancel</button></div></div></div>
+
+<div class="modal" id="ab"><div class="mb"><div class="mh">Add a bag<button type="button" data-close>✕</button></div><div class="mbd f">
+  <label for="abMint">Token mint address</label><input type="text" id="abMint" placeholder="e.g. 9BB6NFEc…pump">
+  <div class="sum" id="abRes">Paste a Solana token mint. We look it up live and add it to Markets so anyone can bid on it.</div>
+</div><div class="mf"><button class="btn g" type="button" id="abGo">Look up &amp; add</button><button class="btn" type="button" data-close>Cancel</button></div></div></div>
+
+<div class="modal" id="lw"><div class="mb"><div class="mh">Look up any wallet<button type="button" data-close>✕</button></div><div class="mbd f">
+  <label for="lwA">Wallet address</label><input type="text" id="lwA" placeholder="Solana wallet address">
+  <div class="sum">Opens the wallet's token holdings on Solscan in a new tab. In the app, you'll be able to bid on any bag you see.</div>
+</div><div class="mf"><button class="btn g" type="button" id="lwGo">Open on Solscan ↗</button><button class="btn" type="button" data-close>Cancel</button></div></div></div>
+<div id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+/* ================= CONFIG ================= */
+var CONFIG={xUrl:'https://x.com/OPCLive',xHandle:'@OPCLive',ca:'',buyUrl:''};
+var MINTS={SOL:'So11111111111111111111111111111111111111112',PUMP:'pumpCmXqMfrsAkQ5r49WcJnRayYRqmXz6ae8H7H9Dfn',JUP:'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN',PYTH:'HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3',PENGU:'2zMMhcVQEXDtdE6vsFS7S7D5oUodfJHE8vd1gnBouauv',TRUMP:'6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN',RAY:'4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R',BONK:'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',JTO:'jtojtomepa8beP8AuQc6eXt5FriJwfFMwQx2v2f9mCL',WIF:'EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm',FARTCOIN:'9BB6NFEcjBCtnNLFko2FqVQBq8HHM13kCyYcdQbgpump',W:'85VBFQZC9TZkfaptBWjvUw7YbZjy52A6mjtPGjstQAmQ',POPCAT:'7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr'};
+/* ========================================== */
+function $(s){return document.querySelector(s)}
+function $$(s){return Array.prototype.slice.call(document.querySelectorAll(s))}
+var tt;function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('show')},3000)}
+function srand(s){return function(){s=(s*1664525+1013904223)>>>0;return s/4294967296}}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function usd(v){var a=Math.abs(v);return (v<0?'-':'')+'$'+(a>=1e9?(a/1e9).toFixed(2)+'B':a>=1e6?(a/1e6).toFixed(2)+'M':a>=1e3?(a/1e3).toFixed(1)+'K':a.toFixed(a<10?2:0))}
+function sub0(p){if(!isFinite(p))return '—';if(p>=1)return p.toFixed(2);if(p>=.01)return p.toFixed(4);var s=p.toFixed(12).split('.')[1],z=0;while(s[z]==='0')z++;return '0.0'+'₀₁₂₃₄₅₆₇₈₉'.split('')[z]+s.substr(z,4)}
+function px(p){return '$'+sub0(p)}
+function amt(n){return n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n.toFixed(2)}
+var LS={get:function(k,d){try{var v=localStorage.getItem('otc.'+k);return v?JSON.parse(v):d}catch(e){return d}},set:function(k,v){try{localStorage.setItem('otc.'+k,JSON.stringify(v))}catch(e){}}};
+var REDUCE=matchMedia('(prefers-reduced-motion: reduce)').matches;
+// eye icon
+function eye(w,h){return '<svg viewBox="0 0 64 40" width="'+w+'" height="'+h+'"><rect x="0" y="0" width="64" height="40" rx="10" fill="#0d2818"/><path d="M6 20 Q32 -2 58 20 Q32 42 6 20Z" fill="#f2f5f2"/><circle cx="32" cy="20" r="10" fill="#22c55e"/><circle cx="32" cy="20" r="5" fill="#070908"/><circle cx="35" cy="17" r="2" fill="#fff"/><path d="M14 32 L22 26 L28 29 L38 20 L44 23 L52 14" fill="none" stroke="#bef264" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".0"/></svg>'}
+$('#brandIco').innerHTML='<svg viewBox="0 0 64 40" width="40" height="25"><rect width="64" height="40" rx="10" fill="#0d2818"/><path d="M6 20 Q32 -2 58 20 Q32 42 6 20Z" fill="#f2f5f2"/><circle cx="32" cy="20" r="10" fill="#22c55e"/><circle cx="32" cy="20" r="5" fill="#070908"/><circle cx="35" cy="17" r="2" fill="#fff"/></svg>';
+$('#eyeHero').innerHTML='<svg class="eye" viewBox="0 0 64 40"><rect width="64" height="40" rx="10" fill="#0d2818" stroke="#1d4a2c"/><path d="M6 20 Q32 -2 58 20 Q32 42 6 20Z" fill="#f2f5f2"/><circle cx="32" cy="20" r="10" fill="#22c55e"><animate attributeName="cx" values="32;26;38;32" dur="6s" repeatCount="indefinite"/></circle><circle cx="32" cy="20" r="5" fill="#070908"><animate attributeName="cx" values="32;26;38;32" dur="6s" repeatCount="indefinite"/></circle></svg>';
+(function(){var s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#0d2818"/><path d="M6 32 Q32 10 58 32 Q32 54 6 32Z" fill="#f2f5f2"/><circle cx="32" cy="32" r="10" fill="#22c55e"/><circle cx="32" cy="32" r="5" fill="#070908"/></svg>';$('#fav').href='data:image/svg+xml,'+encodeURIComponent(s)})();
+
+/* ================= MARKET DATA ================= */
+var MK={},SOLUSD=0,LIVE=false,EXTRA=LS.get('bags',[]);
+var SNAP=[['PUMP','Pump','',.004219,1.94e9,4.46e6,-2.29,2.3e7],['JUP','Jupiter','',.267,8.86e8,1.02e6,-4.47,6.1e5],['PYTH','Pyth Network','',.06996,5.51e8,1.58e5,-2.61,6.8e4],['PENGU','Pudgy Penguins','',.007549,4.75e8,7.59e5,-2.32,3.39e6],['TRUMP','OFFICIAL TRUMP','',1.66,4.69e8,2.67e5,-2.76,2.22e5],['RAY','Raydium','',1.64,4.44e8,4.5e6,-6.91,2.07e6],['BONK','Bonk','',.000003009,2.67e8,7.95e5,-2.3,3.03e5],['JTO','Jito','',.3977,2.12e8,1.12e5,-7.23,1.04e6],['WIF','dogwifhat','',.1772,1.77e8,1.56e5,-2.29,1.37e5],['FARTCOIN','Fartcoin','',.1267,1.27e8,2.95e5,24.03,6.88e6],['W','Wormhole','',.01221,8.07e7,1.05e4,-4.59,1.19e5],['POPCAT','Popcat','',.04141,4.06e7,1.3e5,-5.16,3.32e6]];
+function ingest(pairs){var by={};pairs.forEach(function(p){if(!p||!p.baseToken)return;var a=p.baseToken.address;if(!by[a])by[a]={pairs:[]};by[a].pairs.push(p)});
+  Object.keys(by).forEach(function(a){var ps=by[a].pairs.sort(function(x,y){return (y.liquidity&&y.liquidity.usd||0)-(x.liquidity&&x.liquidity.usd||0)}),b=ps[0];var sym=(b.baseToken.symbol||'').replace(/^\$/,'').trim().toUpperCase();
+    if(a===MINTS.SOL){SOLUSD=+b.priceUsd;return}
+    MK[a]={mint:a,sym:sym,name:b.baseToken.name,img:(b.info&&b.info.imageUrl)||'',price:+b.priceUsd,mc:b.marketCap||b.fdv||0,vol:ps.reduce(function(s,p){return s+(p.volume&&p.volume.h24||0)},0),chg:(b.priceChange&&b.priceChange.h24)||0,liq:ps.reduce(function(s,p){return s+(p.liquidity&&p.liquidity.usd||0)},0),pool:b.pairAddress,dex:b.dexId,extra:EXTRA.indexOf(a)>=0}})}
+function fetchAll(){var all=Object.values(MINTS).concat(EXTRA),chunks=[];for(var i=0;i<all.length;i+=30)chunks.push(all.slice(i,i+30));
+  return Promise.all(chunks.map(function(c){return fetch('https://api.dexscreener.com/tokens/v1/solana/'+c.join(',')).then(function(r){if(!r.ok)throw 0;return r.json()})})).then(function(res){var flat=[].concat.apply([],res);if(flat.length<3)throw 0;ingest(flat);return true})}
+function loadSnap(){SOLUSD=SOLUSD||185;SNAP.forEach(function(s){var m=MINTS[s[0]];MK[m]={mint:m,sym:s[0],name:s[1],img:'',price:s[3],mc:s[4],vol:s[5],chg:s[6],liq:s[7],pool:'',snap:1}})}
+function setLive(on){LIVE=on;$('#live').classList.toggle('on',on);$('#liveT').textContent=on?'live · DexScreener':'sample snapshot';$('#mNote').textContent=on?'Live data: DexScreener, refreshed every 30s. Candles: GeckoTerminal. "$25K sell would print" is a constant-product estimate from total pool liquidity.':'Live data could not be reached, so this is a labelled snapshot. "$25K sell would print" is a constant-product estimate.'}
+function impact(usdIn,liq){if(!(liq>0))return 1;var R=liq/2;return 1-Math.pow(R/(R+usdIn),2)}
+function list(){return Object.values(MK)}
+
+/* ================= OFFERS (sample, priced live) ================= */
+var MAKERS=['7xKX…q9Fd','9WzD…AWWM','4Nd1…ykAx','HN7c…YWrH','2Fq8…ZtNn','CmPj…8uKe','6sbz…Db8S','Dvr3…KpQ1','3Hq9…wTe2'];var OFFERS=[],MINE=LS.get('mine',[]);
+function buildOffers(){var R=srand(1337),L=list().filter(function(m){return !m.extra}).sort(function(a,b){return b.mc-a.mc}).slice(0,10);OFFERS=[];
+  L.forEach(function(m,i){var n=1+((R()*2)|0);for(var k=0;k<n;k++){var side=R()<.55?'ask':'bid',sizeUsd=Math.round((8e3+R()*240e3)/100)*100,vs=side==='ask'?-(2+R()*28):-(5+R()*35),prv=R()<.18,exp=[1,6,24,72,168][(R()*5)|0];OFFERS.push({id:'#'+(1040+OFFERS.length),mint:m.mint,side:side,usd:sizeUsd,tokens:sizeUsd/m.price,vs:vs,prv:prv,maker:MAKERS[(R()*MAKERS.length)|0],exp:exp,sample:1})}})}
+var OT='all';
+function offerRows(){var q=$('#oq').value.trim().toLowerCase();var L=OFFERS.concat(MINE.map(function(o){o.mine=1;return o}));
+  var cnt={all:L.length,bid:L.filter(function(o){return o.side==='bid'}).length,ask:L.filter(function(o){return o.side==='ask'}).length,prv:L.filter(function(o){return o.prv}).length};
+  $('#oTabs').innerHTML=[['all','All offers'],['bid','Bids'],['ask','Bags for sale'],['prv','Private']].map(function(t){return '<button type="button" data-t="'+t[0]+'" class="'+(OT===t[0]?'on':'')+'">'+t[1]+'<i>'+cnt[t[0]]+'</i></button>'}).join('');
+  $$('#oTabs button').forEach(function(b){b.addEventListener('click',function(){OT=b.dataset.t;offerRows()})});
+  L=L.filter(function(o){var m=MK[o.mint];if(!m)return false;return (OT==='all'||(OT==='prv'?o.prv:o.side===OT))&&(!q||(m.sym+' '+m.name+' '+o.mint+' '+o.maker+' '+o.id).toLowerCase().indexOf(q)>=0)});
+  L.sort(function(a,b){return (b.mine||0)-(a.mine||0)||b.usd-a.usd});
+  $('#oBody').innerHTML=L.length?L.map(function(o){var m=MK[o.mint],pr=m.price*(1+o.vs/100),imp=impact(o.usd,m.liq),bars=Math.min(5,Math.ceil(imp*100/5));var sup=m.mc>0?(o.tokens*m.price/m.mc*100):0;
+    return '<tr><td class="l"><div class="coin">'+logo(m)+'<div><b>'+esc(m.sym)+'</b><small>'+px(m.price)+'</small></div></div></td><td class="l"><span class="sd '+o.side+'">'+o.side.toUpperCase()+'</span>'+(o.prv?'<span class="sd prv">PRIVATE</span>':'')+(o.mine?'<span class="sd prv" style="color:var(--lime)">YOURS</span>':'')+'</td><td class="num">'+amt(o.tokens)+'<br><small class="mut">'+sup.toFixed(3)+'% supply</small></td><td class="num">'+(SOLUSD?sub0(pr/SOLUSD)+' SOL':px(pr))+'<br><small class="mut">'+px(pr)+'</small></td><td class="num '+(o.vs>=0?'up':'dn')+'">'+(o.vs>=0?'+':'')+o.vs.toFixed(1)+'%</td><td class="num"><span class="imp"><i>'+[0,1,2,3,4].map(function(k){return '<b class="'+(k<bars?'on':'')+'"></b>'}).join('')+'</i>'+(imp*100).toFixed(2)+'%</span></td><td class="num mut">'+esc(o.maker)+'</td><td class="num mut">'+(o.exp<24?o.exp+'h':Math.round(o.exp/24)+'d')+'</td><td>'+(o.mine?'<button type="button" class="tk" data-cancel="'+o.id+'">Cancel</button>':'<button type="button" class="tk" data-take="'+o.id+'">'+(o.side==='ask'?'Buy bag':'Sell into bid')+'</button>')+'</td></tr>'}).join(''):'<tr><td class="l mut" colspan="9" style="text-align:center;padding:24px">No offers match.</td></tr>';
+  $$('[data-take]').forEach(function(b){b.addEventListener('click',function(){toast('Taking offers opens at launch. This is a sample offer.')})});
+  $$('[data-cancel]').forEach(function(b){b.addEventListener('click',function(){MINE=MINE.filter(function(o){return o.id!==b.dataset.cancel});LS.set('mine',MINE);refreshAll();toast('Offer cancelled')})});
+  var bidSol=0,askSol=0;L=OFFERS.concat(MINE);L.forEach(function(o){var m=MK[o.mint];if(!m||!SOLUSD)return;var v=o.tokens*m.price*(1+o.vs/100)/SOLUSD;if(o.side==='bid')bidSol+=v;else askSol+=v});
+  $('#stO').textContent=OFFERS.length+MINE.length;$('#stB').textContent=bidSol>=1000?(bidSol/1000).toFixed(1)+'K':bidSol.toFixed(1);$('#stA').textContent=askSol>=1000?(askSol/1000).toFixed(1)+'K':askSol.toFixed(1)}
+function logo(m){var c=['#22c55e','#4ade80','#86efac','#bef264','#d4d8d4','#16a34a'];var h=0;for(var i=0;i<m.sym.length;i++)h=(h*31+m.sym.charCodeAt(i))>>>0;return m.img?'<img src="'+esc(m.img)+'" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.outerHTML=\'<span class=lg style=background:'+c[h%6]+'>'+esc(m.sym.slice(0,2))+'</span>\'">':'<span class="lg" style="background:'+c[h%6]+'">'+esc(m.sym.slice(0,2))+'</span>'}
+
+/* ================= MARKETS TABLE ================= */
+var MS='mc';
+function offersFor(a){return OFFERS.concat(MINE).filter(function(o){return o.mint===a}).length}
+function markets(){var q=$('#mq').value.trim().toLowerCase();var L=list().filter(function(m){return !q||(m.sym+' '+m.name+' '+m.mint).toLowerCase().indexOf(q)>=0});
+  var key={mc:function(m){return m.mc},vol:function(m){return m.vol},chg:function(m){return m.chg},liq:function(m){return m.liq},imp:function(m){return impact(25e3,m.liq)},off:function(m){return offersFor(m.mint)}}[MS];L.sort(function(a,b){return key(b)-key(a)});
+  $('#stM').textContent=list().length;
+  $('#mBody').innerHTML=L.map(function(m,i){var im=impact(25e3,m.liq);return '<tr><td class="l mut">'+(i+1)+'</td><td class="l"><div class="coin">'+logo(m)+'<div><b>'+esc(m.sym)+(m.extra?' <span class="sd prv" style="color:var(--lime)">ADDED</span>':'')+'</b><small>'+esc(m.name)+'</small></div></div></td><td class="num"><b>'+px(m.price)+'</b></td><td class="num '+(m.chg>=0?'up':'dn')+'">'+(m.chg>=0?'+':'')+(+m.chg).toFixed(2)+'%</td><td class="num">'+usd(m.mc)+'</td><td class="num">'+usd(m.vol)+'</td><td class="num">'+usd(m.liq)+'</td><td class="num dn">-'+(im*100).toFixed(2)+'%</td><td class="num">'+offersFor(m.mint)+'</td><td><button type="button" class="tk" data-obs="'+m.mint+'">Observe</button></td></tr>'}).join('');
+  $$('[data-obs]').forEach(function(b){b.addEventListener('click',function(){pickObs(b.dataset.obs);$('#observe').scrollIntoView({behavior:'smooth',block:'center'})})})}
+$$('#mTabs button').forEach(function(b){b.addEventListener('click',function(){MS=b.dataset.s;$$('#mTabs button').forEach(function(z){z.classList.toggle('on',z===b)});markets()})});
+$('#mq').addEventListener('input',markets);$('#oq').addEventListener('input',offerRows);
+
+/* ================= OBSERVE CARD ================= */
+var OBS=null,OMODE='otc',CANDLES={},szv=666;
+function szUsd(){return Math.round(Math.pow(10,3+(+$('#osz').value)/1000*2.7)/100)*100}
+function chips(){var L=list().filter(function(m){return !m.extra}).sort(function(a,b){return b.mc-a.mc}).slice(0,6);$('#ochips').innerHTML=L.map(function(m){return '<button type="button" data-c="'+m.mint+'" class="'+(OBS===m.mint?'on':'')+'">'+logo(m)+esc(m.sym)+'</button>'}).join('');$$('#ochips button').forEach(function(b){b.addEventListener('click',function(){pickObs(b.dataset.c)})})}
+function pickObs(a){OBS=a;LS.set('obs',a);chips();loadCandles(a);obsCalc()}
+function obsCalc(){var m=MK[OBS];if(!m)return;var S=szUsd(),im=impact(S,m.liq);$('#osz').style.setProperty('--p',($('#osz').value/10)+'%');$('#oszV').textContent=usd(S);
+  $('#oLogo').innerHTML=logo(m);$('#oTitle').textContent='Sell '+usd(S)+' of '+m.sym;$('#oSub').textContent='Example ticket at '+(LIVE?'live':'snapshot')+' prices · '+px(m.price);
+  var avg=(1-Math.sqrt(1-im));// avg fill discount approx for constant product: received = S*(R/(R+S))
+  var R=m.liq/2,recvP=R>0?S*R/(R+S):0;$('#oPool').textContent='-'+(im*100).toFixed(1)+'%';$('#oLiq').textContent=usd(m.liq);$('#oRecvP').textContent=usd(recvP);$('#oRecvO').textContent=usd(S);$('#oSave').textContent='+'+usd(S-recvP);drawObs()}
+$('#osz').addEventListener('input',obsCalc);
+$$('#omode button').forEach(function(b){b.addEventListener('click',function(){OMODE=b.dataset.m;$$('#omode button').forEach(function(z){z.classList.toggle('on',z===b)});drawObs()})});
+function loadCandles(a){var m=MK[a];if(!m)return;if(CANDLES[a]){drawObs();return}
+  if(LIVE&&m.pool){fetch('https://api.geckoterminal.com/api/v2/networks/solana/pools/'+m.pool+'/ohlcv/hour?limit=60&currency=usd').then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){var l=j.data.attributes.ohlcv_list;if(!l||l.length<5)throw 0;CANDLES[a]={c:l.slice().reverse().map(function(x){return [x[1],x[2],x[3],x[4]]}),live:1};$('#ocSrc').textContent='GeckoTerminal · 1h';drawObs()}).catch(function(){CANDLES[a]={c:synth(m)};$('#ocSrc').textContent='sample candles';drawObs()})}else{CANDLES[a]={c:synth(m)};$('#ocSrc').textContent='sample candles';drawObs()}}
+function synth(m){var R=srand(m.sym.length*991+7),out=[],p=m.price/(1+m.chg/100);for(var i=0;i<60;i++){var o=p,c=o*(1+(R()-.5)*.03+(m.chg/100)/60),h=Math.max(o,c)*(1+R()*.01),l=Math.min(o,c)*(1-R()*.01);out.push([o,h,l,c]);p=c}out[59][3]=m.price;return out}
+var oT=0;
+function drawObs(){var cv=$('#oc'),r=cv.getBoundingClientRect();if(!r.width)return;var dpr=Math.min(2,devicePixelRatio||1),W=Math.round(r.width),H=Math.round(r.height);cv.width=W*dpr;cv.height=H*dpr;var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+  var m=MK[OBS],C=(CANDLES[OBS]||{}).c;if(!m||!C)return;var im=impact(szUsd(),m.liq),last=C[C.length-1][3];
+  var extra=OMODE==='pool'?[[last,last,last*(1-im),last*(1-im)]]:[[last,last*1.0015,last*.9985,last]];var all=C.concat(extra);
+  var lo=Infinity,hi=-Infinity;all.forEach(function(c){lo=Math.min(lo,c[2]);hi=Math.max(hi,c[1])});var pad=(hi-lo)*.08||last*.01;lo-=pad;hi+=pad;
+  var L=4,Rr=70,Y=function(p){return 8+(hi-p)/(hi-lo)*(H-20)};
+  x.strokeStyle='#1f2620';x.lineWidth=1;x.font='10px JetBrains Mono, monospace';x.fillStyle='#5d665f';for(var g=0;g<=4;g++){var py=8+g*(H-20)/4;x.beginPath();x.moveTo(L,py+.5);x.lineTo(W-Rr,py+.5);x.stroke();x.fillText(sub0(hi-g*(hi-lo)/4),W-Rr+6,py+3)}
+  var n=all.length,bw=(W-L-Rr)/n;all.forEach(function(c,i){var isX=i===n-1,up=c[3]>=c[0],X=L+i*bw+bw/2;x.fillStyle=isX?(OMODE==='pool'?'#f05252':'#bef264'):(up?'#4ade80':'#f05252');x.globalAlpha=isX?1:.9;x.fillRect(Math.round(X)-.5,Y(c[1]),1,Math.max(1,Y(c[2])-Y(c[1])));var top=Y(Math.max(c[0],c[3])),bh=Math.max(1.5,Math.abs(Y(c[0])-Y(c[3])));x.fillRect(Math.round(X-bw*.34),top,Math.max(1,Math.round(bw*.68)),bh);x.globalAlpha=1});
+  // last price line
+  var target=OMODE==='pool'?last*(1-im):last,yy=Math.round(Y(target))+.5;x.setLineDash([4,4]);x.strokeStyle=OMODE==='pool'?'#f05252':'#bef264';x.beginPath();x.moveTo(L,yy);x.lineTo(W-Rr,yy);x.stroke();x.setLineDash([]);x.fillStyle=OMODE==='pool'?'#f05252':'#bef264';x.fillRect(W-Rr,yy-9,Rr,18);x.fillStyle='#070908';x.font='600 10px JetBrains Mono, monospace';x.fillText(OMODE==='pool'?'-'+(im*100).toFixed(1)+'%':'0.00%',W-Rr+6,yy+3.5);
+  // eye watermark label
+  x.fillStyle=OMODE==='pool'?'rgba(240,82,82,.9)':'rgba(190,242,100,.9)';x.font='700 12px Inter, sans-serif';x.fillText(OMODE==='pool'?'MARKET SELL: everyone sees this candle':'OTC: nothing to see. Just observe.',L+6,18)}
+addEventListener('resize',function(){drawObs()});
+var autoMode=setInterval(function(){if(REDUCE||document.visibilityState!=='visible')return;var r=$('#oc').getBoundingClientRect();if(r.bottom<0||r.top>innerHeight)return;OMODE=OMODE==='otc'?'pool':'otc';$$('#omode button').forEach(function(z){z.classList.toggle('on',z.dataset.m===OMODE)});drawObs()},3500);
+$('#omode').addEventListener('click',function(){clearInterval(autoMode)});
+
+/* ================= POSITIONS + MAKE OFFER ================= */
+var MSIDE='bid';
+function positions(){var P=$('#pos');if(!MINE.length){P.innerHTML='<div class="empty">No offers yet. Make one and it shows here and in Open offers.</div>';return}
+  P.innerHTML=MINE.map(function(o){var m=MK[o.mint]||{sym:'?',price:0,name:''},left=Math.max(0,o.t0+o.exp*3600e3-Date.now());return '<div class="it">'+(MK[o.mint]?logo(m):'')+'<div class="tx"><b><span class="sd '+o.side+'">'+o.side.toUpperCase()+'</span> '+amt(o.tokens)+' '+esc(m.sym)+'</b><br><span class="mut">'+(o.vs>=0?'+':'')+o.vs+'% vs spot · '+(o.prv?'private':'anyone')+' · '+(left?Math.ceil(left/3600e3)+'h left':'expired')+' · '+o.id+'</span></div><button type="button" class="tk" data-cancel2="'+o.id+'">Cancel</button></div>'}).join('');
+  $$('[data-cancel2]').forEach(function(b){b.addEventListener('click',function(){MINE=MINE.filter(function(o){return o.id!==b.dataset.cancel2});LS.set('mine',MINE);refreshAll();toast('Offer cancelled')})})}
+function fillTok(){var S=$('#mTok'),cur=S.value;S.innerHTML=list().sort(function(a,b){return b.mc-a.mc}).map(function(m){return '<option value="'+m.mint+'">'+esc(m.sym)+' · '+esc(m.name)+'</option>'}).join('');if(cur&&MK[cur])S.value=cur;else if(OBS)S.value=OBS}
+function msum(){var m=MK[$('#mTok').value],n=+$('#mSize').value,vs=+$('#mPrice').value,err='';if(!m)return;if(!(n>0))err='Enter a size.';else if(vs<-90||vs>50)err='Keep the price between -90% and +50% of spot.';
+  else if($('#mMaker').value==='private'&&!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test($('#mWal').value.trim()))err='Enter a valid Solana wallet for a private offer.';$('#mErr').textContent=err;
+  if(!(n>0)){$('#mSum').innerHTML='Spot <b>'+px(m.price)+'</b> · pool liquidity <b>'+usd(m.liq)+'</b>';return}
+  var p=m.price*(1+vs/100),tot=n*p,im=impact(n*m.price,m.liq);$('#mSum').innerHTML=(MSIDE==='bid'?'You bid ':'You ask ')+'<b>'+(SOLUSD?(tot/SOLUSD).toFixed(2)+' SOL':usd(tot))+'</b> ('+usd(tot)+') for <b>'+amt(n)+' '+esc(m.sym)+'</b> at '+px(p)+'.<br>Doing this in the pool would move the chart about <b class="dn">'+(im*100).toFixed(2)+'%</b>. Here: <b class="up">0.00%</b>.'}
+['#mTok','#mSize','#mPrice','#mExp','#mMaker','#mWal'].forEach(function(s){$(s).addEventListener('input',msum);$(s).addEventListener('change',msum)});
+$('#mMaker').addEventListener('change',function(){$('#privW').style.display=this.value==='private'?'block':'none'});
+$$('#mSide button').forEach(function(b){b.addEventListener('click',function(){MSIDE=b.dataset.v;$$('#mSide button').forEach(function(z){z.classList.toggle('on',z===b)});msum()})});
+function openOffer(){fillTok();var m=MK[$('#mTok').value];if(m&&!$('#mSize').value)$('#mSize').value=Math.round(25e3/m.price);msum();$('#mo').classList.add('on')}
+$$('[data-offer]').forEach(function(b){b.addEventListener('click',function(e){e.preventDefault();closeSide();openOffer()})});
+$('#mTok').addEventListener('change',function(){var m=MK[this.value];if(m)$('#mSize').value=Math.round(25e3/m.price);msum()});
+$('#mGo').addEventListener('click',function(){msum();if($('#mErr').textContent){toast($('#mErr').textContent);return}var m=MK[$('#mTok').value];MINE.unshift({id:'#'+(9000+MINE.length+((Date.now()/1000|0)%900)),mint:m.mint,side:MSIDE,tokens:+$('#mSize').value,usd:+$('#mSize').value*m.price,vs:+$('#mPrice').value,prv:$('#mMaker').value==='private',maker:'you',exp:+$('#mExp').value,t0:Date.now()});LS.set('mine',MINE);$('#mo').classList.remove('on');refreshAll();$('#positions').scrollIntoView({behavior:'smooth'});toast('Offer saved as a preview. Signing and escrow open at launch.')});
+
+/* ================= ADD A BAG / LOOKUP ================= */
+$$('[data-addbag]').forEach(function(b){b.addEventListener('click',function(e){e.preventDefault();closeSide();$('#ab').classList.add('on');$('#abMint').focus()})});
+$('#abGo').addEventListener('click',function(){var a=$('#abMint').value.trim();if(!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a)){$('#abRes').innerHTML='<span class="dn">That doesn’t look like a Solana mint address.</span>';return}if(MK[a]){$('#abRes').innerHTML='<b>'+esc(MK[a].sym)+'</b> is already listed.';return}
+  $('#abRes').textContent='Looking it up…';fetch('https://api.dexscreener.com/tokens/v1/solana/'+a).then(function(r){return r.json()}).then(function(j){if(!j||!j.length)throw 0;EXTRA.push(a);LS.set('bags',EXTRA);ingest(j);var m=MK[a];$('#abRes').innerHTML='Added <b>'+esc(m.sym)+'</b> ('+esc(m.name)+') · '+px(m.price)+' · liquidity '+usd(m.liq)+'. Anyone can bid on it now.';refreshAll();toast(m.sym+' added to Markets')}).catch(function(){$('#abRes').innerHTML='<span class="dn">Couldn’t find live pools for that mint.</span>'})});
+$('#lookup').addEventListener('click',function(){$('#lw').classList.add('on');$('#lwA').focus()});
+$('#lwGo').addEventListener('click',function(){var a=$('#lwA').value.trim();if(!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a)){toast('Enter a valid Solana wallet address.');return}window.open('https://solscan.io/account/'+a+'#portfolio','_blank','noopener')});
+$$('[data-close]').forEach(function(b){b.addEventListener('click',function(){$$('.modal').forEach(function(m){m.classList.remove('on')})})});
+$$('.modal').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)m.classList.remove('on')})});addEventListener('keydown',function(e){if(e.key==='Escape')$$('.modal').forEach(function(m){m.classList.remove('on')})});
+
+/* ================= DOCS / RISK ================= */
+function acc(el,items){$(el).innerHTML=items.map(function(q,i){return '<div class="q'+(i===0?' open':'')+'"><button type="button">'+q[0]+'<i>+</i></button><div class="a">'+q[1]+'</div></div>'}).join('');$$(el+' .q button').forEach(function(b){b.addEventListener('click',function(){b.parentNode.classList.toggle('open')})})}
+acc('#docsL',[['What is Observe Profit Charts?','An over-the-counter desk for Solana memecoins. Buyers bid on anyone’s bag, sellers list theirs whole, and the trade settles wallet to wallet without touching the pool.'],['Why "Observe Profit Charts"?','A big market sell prints a red candle everyone can see and eats your profit in slippage. OTC trades never hit the pool, so the chart doesn’t move and you keep the profit. You just observe.'],['How is an offer checked?','The maker’s wallet signs the offer, and the desk checks the bag against its on-chain balance before anyone can take it.'],['How does settlement work?','Both sides deposit into an escrow program. It releases tokens and SOL together, or refunds both. Settlement opens with $OPC.'],['What does "chart impact avoided" mean?','A constant-product estimate of how far that size would move price if sold or bought in the pool, based on live pool liquidity.']]);
+acc('#riskL',[['Memecoins are volatile','Prices can go to zero. A good OTC price today can be a bad one tomorrow.'],['Offers can go stale','Spot moves while an offer is open. Check vs-spot before you take an offer.'],['Estimates are estimates','Chart impact uses total pool liquidity and a simple model. Real slippage depends on routing and pool type.'],['Check the mint','Anyone can add a bag. Always confirm the mint address before bidding.'],['Pre-launch','Escrow, signing and fees go live with $OPC. Offers here are previews saved on your device.']]);
+
+/* ================= NAV / LINKS ================= */
+function closeSide(){$('#side').classList.remove('open');$('#scrim').classList.remove('on')}
+$('#hb').addEventListener('click',function(){$('#side').classList.add('open');$('#scrim').classList.add('on')});$('#scrim').addEventListener('click',closeSide);
+$$('.nav a[href^="#"]:not([href="#"])').forEach(function(a){a.addEventListener('click',closeSide)});
+var SECS=[['home','Home'],['observe','Observe'],['offers','Bags'],['positions','Positions'],['markets','Markets'],['docs','Docs'],['token','$OPC']];
+addEventListener('scroll',function(){var y=scrollY+130,cur=SECS[0];SECS.forEach(function(s){var el=document.getElementById(s[0]);if(el&&el.getBoundingClientRect().top+scrollY<=y)cur=s});$('#crumbB').textContent=cur[1];$$('.nav a').forEach(function(a){a.classList.toggle('on',a.getAttribute('href')==='#'+cur[0])})},{passive:true});
+function wire(a,url,msg){if(!a)return;if(url){a.href=url;a.target='_blank';a.rel='noopener noreferrer'}else a.addEventListener('click',function(e){e.preventDefault();toast(msg)})}
+['#xSide','#xA','#xFoot'].forEach(function(s){wire($(s),CONFIG.xUrl,'Our X drops soon. The launch is posted there.')});wire($('#buyA'),CONFIG.buyUrl,'$OPC launches soon. The CA is posted on X.');
+$('#connect').addEventListener('click',function(){toast('Wallet connect opens when $OPC launches.')});
+if(CONFIG.ca)$('#caT').textContent=CONFIG.ca;$('#caC').addEventListener('click',function(){if(!CONFIG.ca){toast('Not posted yet. Watch our X.');return}try{navigator.clipboard.writeText(CONFIG.ca);toast('Copied')}catch(e){toast(CONFIG.ca)}});
+$('#vsP').textContent='-'+(impact(250e3,1e6)*100).toFixed(1)+'%';
+
+/* ================= BOOT ================= */
+function refreshAll(){offerRows();markets();positions();chips();obsCalc()}
+var booted=false;function boot(live){if(booted)return;booted=true;setLive(live);buildOffers();var s=LS.get('obs',null);OBS=MK[s]?s:(MK[MINTS.JUP]?MINTS.JUP:list()[0].mint);refreshAll();loadCandles(OBS)}
+Promise.race([fetchAll(),new Promise(function(r){setTimeout(function(){r(false)},5000)})]).then(function(ok){if(!ok){loadSnap();boot(false)}else boot(true)}).catch(function(){loadSnap();boot(false)});
+setInterval(function(){if(!LIVE)return;fetchAll().then(function(){offerRows();markets();obsCalc()}).catch(function(){})},30000);
+})();
+</script>
+</body>
+</html>
